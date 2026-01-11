@@ -19,7 +19,7 @@ MCP server. You must use both in order to to use this mod.
 
 1. Download the latest release and unzip the contents to your MODS directory.
 Typically this is 
-`%USERPROFILE%\Documents\My Games\Sid Meier's Civilization 5\Mods`.
+`%USERPROFILE%\Documents\My Games\Sid Meier's Civilization 5\MODS`.
   - The directory should look like
 ```
 MODS/
