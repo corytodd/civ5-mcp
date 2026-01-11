@@ -18,6 +18,17 @@ local FOCUS_TYPES = {
     [6] = "FOCUS_TYPE_FAITH"
 }
 
+local ATTITUDE_TYPES = {
+    [-1] = "ATTITUDE_NONE",
+    [0] = "ATTITUDE_WAR",
+    [1] = "ATTITUDE_HOSTILE",
+    [2] = "ATTITUDE_DECEPTIVE",
+    [3] = "ATTITUDE_GUARDED",
+    [4] = "ATTITUDE_AFRAID",
+    [5] = "ATTITUDE_FRIENDLY",
+    [6] = "ATTITUDE_NEUTRAL"
+}
+
 -- Get feature type of a plot or nil
 function Civ5MCP.GetFeature(plot)
     local featureType = plot:GetFeatureType()
@@ -222,12 +233,37 @@ function Civ5MCP.GetCityStateQuests(_playerID)
     return {}
 end
 
--- TODO: Get opponents info
+function Civ5MCP.GetOpponentAttitudeTowardsPlayer(opponentID, playerID)
+    local opponent = Players[opponentID]
+    if not opponent then return "UNKNOWN" end
+    return ATTITUDE_TYPES[opponent:GetMajorCivApproach(playerID)] or "UNKNOWN"
+end
+
+-- Get information on met opponents
 function Civ5MCP.GetOpponents()
-    -- Not implemented yet
     -- A list of opponent players _currently known to the human player_
     -- name, civilization, relationship status, war/peace status, etc.
-    return {}
+    local metOpponents = {}
+    local humanPlayerID = Game.GetActivePlayer()
+    local humanPlayer = Players[humanPlayerID]
+
+    local humanTeam = Teams[humanPlayer:GetTeam()]
+    for opponentID = 0, GameDefines.MAX_CIV_PLAYERS - 1 do
+        if opponentID ~= humanPlayerID then
+            local opponent = Players[opponentID]
+            if opponent and opponent:IsAlive() then
+                if humanTeam:IsHasMet(opponent:GetTeam()) then
+                    table.insert(metOpponents, {
+                        name = opponent:GetName(),
+                        civilization = opponent:GetCivilizationShortDescription(),
+                        isAtWar = humanTeam:IsAtWar(opponent:GetTeam()),
+                        attitude = Civ5MCP.GetOpponentAttitudeTowardsPlayer(opponentID, humanPlayerID)
+                    })
+                end
+            end
+        end
+    end
+    return metOpponents
 end
 
 -- Return game difficulty as string
