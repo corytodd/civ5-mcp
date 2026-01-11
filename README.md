@@ -42,4 +42,28 @@ python3 ./tools/build.py
 ./tools/deploy.ps1
 ```
 
+## Running the Server
+
+```
+cd server
+
+# Test that the server can be launched
+uv run civ5_mcp_server.py
+```
+
+If you don't see any errors, you can add this server to something like Claude
+using a config similar to this. If uv fails to launch, try using `uv`'s venv
+python binary directly.
+
+```
+{
+  "mcpServers": {
+    "civ5": {
+      "command": "uv",
+      "args": ["run", "path/to/civ5_mcp_server.py"],
+    }
+  }
+}
+```
+
 [Civ5LuaAPI]: https://modiki.civfanatics.com/index.php/Lua_and_UI_Reference_(Civ5)
