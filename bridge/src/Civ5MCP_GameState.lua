@@ -40,6 +40,7 @@ function Civ5MCP.GetCitiesByPlayer(playerID)
             totalSpecialists = city:GetSpecialistCount(),
 
             -- Great People progress
+            -- TODO: this function will crash when starting from non-ancient era
             greatPeopleProgress = {
                 rate = city:GetGreatPeopleRate(),
                 turnsUntilNext = city:GetGreatPeopleRate() > 0 and
@@ -49,7 +50,12 @@ function Civ5MCP.GetCitiesByPlayer(playerID)
 
             -- Location
             x = city:GetX(),
-            y = city:GetY()
+            y = city:GetY(),
+
+            -- TODO: Tiles
+            -- A list of tiles within the city borders in the form:
+            -- { x = X, y = Y, yield = { food = F, production = P, gold = G, science = S, culture = C, faith = Fa, IsWorked = B } }
+            -- Consider an isOverlapped flag if tile _could_ be worked by another city
         }
 
         table.insert(cities, cityData)
