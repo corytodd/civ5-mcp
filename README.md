@@ -4,7 +4,8 @@
 
 Game state is at the end of each turn and written to a SQLite database. Each
 new game is stored as a new session. The session and turn number are used as the
-state's id. The schema is as follows:
+state's id. Turn history and the initial game configuration are stored using
+this session id. The schemas are as follows:
 
 ```
 -- Schema version: 2026-01-10
@@ -14,6 +15,11 @@ CREATE TABLE MCP_GameHistory (
     data TEXT NOT NULL,
     timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (session_id, turn)
+);
+
+CREATE TABLEMCP_GameConfiguration (
+    session_id TEXT PRIMARY KEY,
+    data TEXT NOT NULL
 );
 ```
 

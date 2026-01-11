@@ -38,9 +38,39 @@ local function InitializeDatabase()
         );
     ]]) do end
 
+    for _ in g_UserData.Query([[
+        CREATE TABLE IF NOT EXISTS MCP_GameConfiguration (
+            session_id TEXT PRIMARY KEY,
+            data TEXT NOT NULL
+        );
+    ]]) do end
+
     g_SessionID = GenerateSessionID()
 
     print(string.format("MCP: Database initialized with session ID: %s", g_SessionID))
+end
+
+local function SaveGameConfiguration()
+    local playerID = Game.GetActivePlayer()
+    if playerID == -1 then return end
+
+    if not g_UserData then
+        InitializeDatabase()
+        assert(g_UserData, "Failed to initialize MCP database")
+    end
+
+    local gameMeta = Civ5MCP.GetGameConfiguration(playerID)
+    local jsonString = Civ5MCP.JSON.encode(gameMeta)
+    local escapedJson = jsonString:gsub("'", "''")
+    local escapedSessionID = tostring(g_SessionID):gsub("'", "''")
+    local insertMetaQuery = string.format([[
+        INSERT INTO MCP_GameConfiguration(session_id, data)
+        VALUES('%s', '%s');
+    ]], escapedSessionID:gsub("'", "''"), escapedJson)
+
+    for _ in g_UserData.Query(insertMetaQuery) do end
+
+    print(string.format("MCP: Game setup saved for session ID: %s", g_SessionID))
 end
 
 -- Main export function
@@ -94,8 +124,10 @@ Events.SequenceGameInitComplete.Add(function()
  | |____| |\ V /   ___) | | |  | | |____| |
   \_____|_| \_/   |____/  |_|  |_|\_____|_|
 ]])
-    print("")
+
+    -- TODO: how to detect new game vs loaded game?
     ExportGameState()
+    SaveGameConfiguration()
     print("MCP: Game State Bridge loaded successfully!", os.clock())
 end)
 
