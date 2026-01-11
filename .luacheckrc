@@ -11,6 +11,7 @@ globals = {
     "Locale",
     "PreGame",
     "MapUtilities",
+    "Map",
 
     -- Enums
     "YieldTypes",
