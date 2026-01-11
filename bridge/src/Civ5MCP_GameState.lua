@@ -29,6 +29,9 @@ local ATTITUDE_TYPES = {
     [6] = "ATTITUDE_NEUTRAL"
 }
 
+-- Remember to divide unit moves by this denominator
+local GameDefines_MOVE_DENOMINATOR = GameDefines.MOVE_DENOMINATOR
+
 -- Get feature type of a plot or nil
 function Civ5MCP.GetFeature(plot)
     local featureType = plot:GetFeatureType()
@@ -266,6 +269,77 @@ function Civ5MCP.GetOpponents()
     return metOpponents
 end
 
+function Civ5MCP.GetUnitOnPlot(plot)
+    for i = 0, plot:GetNumUnits() - 1 do
+        local unit = plot:GetUnit(i)
+        if unit and unit:GetOwner() == Game.GetActivePlayer() then
+            return {
+                type = GameInfo.Units[unit:GetUnitType()].Type,
+                owner = Players[unit:GetOwner()]:GetCivilizationShortDescription()
+            }
+        end
+    end
+    return nil
+end
+
+-- Returns a list of plots visible to the given unit with details on plot contents
+function Civ5MCP.GetPlotsVisibleToUnit(unit)
+    local visiblePlots = {}
+    if not unit then return visiblePlots end
+
+    local unitX = unit:GetX()
+    local unitY = unit:GetY()
+    local visionRange = unit:VisibilityRange()
+    local unitTeamID = unit:GetTeam()
+
+    for dx = -visionRange, visionRange do
+        for dy = -visionRange, visionRange do
+            local plot = Map.GetPlotXY(unitX, unitY, dx, dy)
+            local plotX = plot:GetX()
+            local plotY = plot:GetY()
+            if plot and plot:IsVisible(unitTeamID, true) then
+                table.insert(visiblePlots, {
+                    x = plotX,
+                    y = plotY,
+                    distance = math.max(math.abs(dx), math.abs(dy)),
+                    terrain = GameInfo.Terrains[plot:GetTerrainType()].Type,
+                    feature = Civ5MCP.GetFeature(plot),
+                    improvement = Civ5MCP.GetImprovement(plot),
+                    unitOnPlot = Civ5MCP.GetUnitOnPlot(plot),
+                    isSelf = (plotX == unitX and plotY == unitY)
+                })
+            end
+        end
+    end
+
+    return visiblePlots
+end
+
+function Civ5MCP.GetUnits(playerID)
+    local player = Players[playerID]
+    if not player then return {} end
+
+    local units = {}
+    for unit in player:Units() do
+        local unitData = {
+            type = GameInfo.Units[unit:GetUnitType()].Type,
+            x = unit:GetX(),
+            y = unit:GetY(),
+            movesLeft = unit:MovesLeft() / GameDefines_MOVE_DENOMINATOR,
+            health = unit:GetCurrHitPoints(),
+            maxHealth = unit:GetMaxHitPoints(),
+            experience = unit:GetExperience(),
+            level = unit:GetLevel(),
+            isEmbarked = unit:IsEmbarked(),
+            attackStrength = unit:GetBaseCombatStrength(),
+            rangedAttackStrength = unit:GetBaseRangedCombatStrength(),
+            visiblePlots = Civ5MCP.GetPlotsVisibleToUnit(unit)
+        }
+        table.insert(units, unitData)
+    end
+    return units
+end
+
 -- Return game difficulty as string
 function Civ5MCP.GetGameDifficulty()
     local diffInfo = GameInfo.HandicapInfos[Players[Game.GetActivePlayer()]:GetHandicapType()]
@@ -324,7 +398,8 @@ function Civ5MCP.GetGameState(playerID)
         tech = Civ5MCP.GetTechInfoByPlayer(playerID),
         cityStateQuests = Civ5MCP.GetCityStateQuests(playerID),
         opponents = Civ5MCP.GetOpponents(),
-        exportTime = os.date("%Y-%m-%d %H:%M:%S")
+        exportTime = os.date("%Y-%m-%d %H:%M:%S"),
+        units = Civ5MCP.GetUnits(playerID)
     }
 end
 
