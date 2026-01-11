@@ -7,19 +7,20 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # TODO: bundle image or use prebuilt image
-      - name: Build Image
-        run: docker build -t ci-image -f docker/Dockerfile .
-
       - name: Lint Lua files
-        run: docker run --rm -v ${{ github.workspace }}:/app ci-image ./tools/lint.sh
+        run: ./tools/lint.sh
 
       - name: Run Tests
-        run: docker run --rm -v ${{ github.workspace }}:/app ci-image ./tools/test.sh
+        run: ./tools/test.sh
 
       - name: Build Package
-        run: docker run --rm -v ${{ github.workspace }}:/app ci-image ./tools/build.sh
+        run: ./tools/build.sh

@@ -10,17 +10,17 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository }}:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # TODO: bundle image or use prebuilt image
-      - name: Build Image
-        run: docker build -t ci-image -f docker/Dockerfile .
-
       - name: Build Package
-        run: |
-          docker run --rm -v ${{ github.workspace }}:/app ci-image ./tools/build.sh
+        run: ./tools/build.sh
 
       - name: Prepare Package for Release
         id: prep_release
