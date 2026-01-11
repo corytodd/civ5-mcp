@@ -1,6 +1,8 @@
 -- Civ5 MCP Game State Reader
 -- Reads current game state from Civ5 API
 
+include("MapUtilities")
+
 Civ5MCP = Civ5MCP or {}
 
 -- Get visible cities for a player
@@ -60,8 +62,6 @@ function Civ5MCP.GetPlayerInfo(playerID)
     if not player then return {} end
 
     return {
-        name = player:GetName(),
-        civilization = player:GetCivilizationShortDescription(),
         gold = player:GetGold(),
         goldPerTurn = player:CalculateGoldRate(),
         science = player:GetScience(),
@@ -129,16 +129,75 @@ function Civ5MCP.GetOpponents()
     return {}
 end
 
+function GetGameDifficulty()
+    local diffInfo = GameInfo.HandicapInfos[Players[Game.GetActivePlayer()]:GetHandicapType()]
+    return Locale.ConvertTextKey(diffInfo.Description)
+end
+
+function GetGameSpeed()
+    local speedInfo = GameInfo.GameSpeeds[PreGame.GetGameSpeed()]
+    return Locale.ConvertTextKey(speedInfo.Description)
+end
+
+function GetMapName()
+    local mapScript = PreGame.GetMapScript()
+    local mapInfo = MapUtilities.GetBasicInfo(mapScript)
+    return Locale.Lookup(mapInfo.Name)
+end
+
+function GetMapSize()
+    local worldInfo = GameInfo.Worlds[PreGame.GetWorldSize()]
+    return Locale.ConvertTextKey(worldInfo.Description)
+end
+
+function GetMajorCivCount()
+    local count = 0
+    for playerID = 0, GameDefines.MAX_MAJOR_CIVS - 1 do
+        local pPlayer = Players[playerID]
+        if pPlayer and pPlayer:IsAlive() then
+            count = count + 1
+        end
+    end
+    return count
+end
+
+function GetMinorCivCount()
+    local count = 0
+    for playerID = GameDefines.MAX_MAJOR_CIVS, GameDefines.MAX_PLAYERS - 1 do
+        local pPlayer = Players[playerID]
+        if pPlayer and pPlayer:IsMinorCiv() then
+            count = count + 1
+        end
+    end
+    return count
+end
+
 -- Main function to get complete game state
 function Civ5MCP.GetGameState(playerID)
     return {
         turn = Game.GetGameTurn(),
-        gameSpeed = GameInfo.GameSpeeds[Game.GetGameSpeedType()].Type,
         player = Civ5MCP.GetPlayerInfo(playerID),
         cities = Civ5MCP.GetVisibleCities(playerID),
         tech = Civ5MCP.GetTechInfo(playerID),
         cityStateQuests = Civ5MCP.GetCityStateQuests(playerID),
         opponents = Civ5MCP.GetOpponents(),
         exportTime = os.date("%Y-%m-%d %H:%M:%S")
+    }
+end
+
+-- Get game setup info
+function Civ5MCP.GetGameConfiguration(playerID)
+    local player = Players[playerID]
+    if not player then return {} end
+
+    return {
+        name = player:GetName(),
+        civilization = player:GetCivilizationShortDescription(),
+        difficulty = GetGameDifficulty(),
+        gameSpeed = GetGameSpeed(),
+        mapName = GetMapName(),
+        mapSize = GetMapSize(),
+        majorCivCount = GetMajorCivCount(),
+        minorCivCount = GetMinorCivCount()
     }
 end
