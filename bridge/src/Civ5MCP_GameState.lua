@@ -282,6 +282,30 @@ function Civ5MCP.GetUnitOnPlot(plot)
     return nil
 end
 
+-- Get plot owner civilization or nil
+function Civ5MCP.GetPlotOwner(plot)
+    local ownerID = plot:GetOwner()
+    if ownerID >= 0 then
+        -- If we've not met the owner and this is a city state, return "City-State"
+        local humanPlayerID = Game.GetActivePlayer()
+        local humanPlayer = Players[humanPlayerID]
+        local humanTeam = Teams[humanPlayer:GetTeam()]
+        local ownerPlayer = Players[ownerID]
+        if humanTeam:IsHasMet(ownerPlayer:GetTeam()) == false and ownerPlayer:IsMinorCiv() then
+            return "UNKNOWN_CITY_STATE"
+        end
+
+        -- If we've not met the owner and this is a major civ, return "Unknown Civ"
+        if humanTeam:IsHasMet(ownerPlayer:GetTeam()) == false and not ownerPlayer:IsMinorCiv() then
+            return "UNKNOWN_CIV"
+        end
+
+        -- Otherwise return the actual name
+        return Players[ownerID]:GetCivilizationShortDescription()
+    end
+    return nil
+end
+
 -- Returns a list of plots visible to the given unit with details on plot contents
 function Civ5MCP.GetPlotsVisibleToUnit(unit)
     local visiblePlots = {}
@@ -306,7 +330,8 @@ function Civ5MCP.GetPlotsVisibleToUnit(unit)
                     feature = Civ5MCP.GetFeature(plot),
                     improvement = Civ5MCP.GetImprovement(plot),
                     unitOnPlot = Civ5MCP.GetUnitOnPlot(plot),
-                    isSelf = (plotX == unitX and plotY == unitY)
+                    isSelf = (plotX == unitX and plotY == unitY),
+                    owner = Civ5MCP.GetPlotOwner(plot)
                 })
             end
         end
