@@ -7,10 +7,33 @@ include("MapUtilities")
 
 Civ5MCP = Civ5MCP or {}
 
--- Get all plots within a city's borders
--- Reads current game state from Civ5 API
+-- Get feature type of a plot or nil
+function Civ5MCP.GetFeature(plot)
+    local featureType = plot:GetFeatureType()
+    if featureType >= 0 then
+        return GameInfo.Features[featureType].Type
+    end
+    return nil
+end
 
-Civ5MCP = Civ5MCP or {}
+-- Get improvement type of a plot or nil
+function Civ5MCP.GetImprovement(plot)
+    local improvementType = plot:GetImprovementType()
+    if improvementType >= 0 then
+        return GameInfo.Improvements[improvementType].Type
+    end
+    return nil
+end
+
+-- Get resource type and class of a plot or nils
+function Civ5MCP.GetResourceInfo(plot)
+    local resourceType = plot:GetResourceType()
+    if resourceType >= 0 then
+        local resourceInfo = GameInfo.Resources[resourceType]
+        return resourceInfo.Type, resourceInfo.ResourceClassType
+    end
+    return nil, nil
+end
 
 -- Get plots for a city
 function Civ5MCP.GetCityPlots(city, playerID)
@@ -29,6 +52,8 @@ function Civ5MCP.GetCityPlots(city, playerID)
                 tilesWorked = tilesWorked + 1
             end
 
+            local resource, resourceType = Civ5MCP.GetResourceInfo(plot)
+
             local plotData = {
                 x = plot:GetX(),
                 y = plot:GetY(),
@@ -42,12 +67,10 @@ function Civ5MCP.GetCityPlots(city, playerID)
                     faith = plot:CalculateYield(YieldTypes.YIELD_FAITH, true)
                 },
                 terrain = GameInfo.Terrains[plot:GetTerrainType()].Type,
-                feature = plot:GetFeatureType() >= 0 and GameInfo.Features[plot:GetFeatureType()].Type or nil,
-                improvement = plot:GetImprovementType() >= 0 and GameInfo.Improvements[plot:GetImprovementType()].Type or
-                    nil,
-                resource = plot:GetResourceType() >= 0 and GameInfo.Resources[plot:GetResourceType()].Type or nil,
-                resourceType = plot:GetResourceType() >= 0 and
-                    GameInfo.Resources[plot:GetResourceType()].ResourceClassType or nil
+                feature = Civ5MCP.GetFeature(plot),
+                improvement = Civ5MCP.GetImprovement(plot),
+                resource = resource,
+                resourceType = resourceType
 
             }
             table.insert(plots, plotData)
