@@ -7,7 +7,7 @@ RUN apt-get update && \
     lua5.1 \
     liblua5.1-0-dev \
     luarocks \
-    gcc \
+    build-essential \
     libc6-dev \
     python3 && \
     luarocks install luacheck && \
