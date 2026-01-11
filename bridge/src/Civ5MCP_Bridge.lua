@@ -109,8 +109,10 @@ local function ExportGameState()
 end
 
 -- Hook into player's (the human one) turn
-Events.ActivePlayerTurnEnd.Add(function()
-    ExportGameState()
+GameEvents.PlayerDoTurn.Add(function(playerID)
+    if playerID == Game.GetActivePlayer() then
+        ExportGameState()
+    end
 end)
 
 -- Hook into game initialization

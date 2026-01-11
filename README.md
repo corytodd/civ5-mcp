@@ -2,7 +2,7 @@
 
 ## Bridge
 
-Game state is at the end of each turn and written to a SQLite database. Each
+Game state is at the start of each turn and written to a SQLite database. Each
 new game is stored as a new session. The session and turn number are used as the
 state's id. Turn history and the initial game configuration are stored using
 this session id. The schemas are as follows:
