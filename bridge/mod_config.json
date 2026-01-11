@@ -1,0 +1,53 @@
+{
+  "mod": {
+    "id": "c478e789-6f04-4aa3-bb80-d83ffec6cf77"
+  },
+  "properties": {
+    "name": "Civ5 MCP Bridge",
+    "teaser": "Provides an IPC bridge for MCP/AI advisor integration",
+    "description": "Exports current game state to SQLite database for use with Model Context Protocol",
+    "authors": "corytodd",
+    "hide_setup_game": false,
+    "affects_saved_games": false,
+    "min_compatible_save_version": 0,
+    "supports_single_player": true,
+    "supports_multiplayer": true,
+    "supports_hotseat": true,
+    "supports_mac": true,
+    "reload_audio_system": false,
+    "reload_landmark_system": false,
+    "reload_strategic_view_system": false,
+    "reload_unit_system": false
+  },
+  "files": [
+    {
+      "path": "Civ5MCP_Bridge.lua",
+      "import": true
+    },
+    {
+      "path": "Civ5MCP_Json.lua",
+      "import": true
+    },
+    {
+      "path": "Civ5MCP_GameState.lua",
+      "import": true
+    },
+    {
+      "path": "Civ5MCP_Constants.lua",
+      "import": true
+    }
+  ],
+  "entrypoints": [
+    {
+      "type": "InGameUIAddin",
+      "file": "Civ5MCP_Bridge.lua",
+      "name": "Bridge",
+      "description": "Bridge event registration"
+    }
+  ],
+  "build": {
+    "src_dir": "bridge/src",
+    "dist_dir": "dist",
+    "mod_folder_name": "Civ5MCP_Bridge"
+  }
+}
