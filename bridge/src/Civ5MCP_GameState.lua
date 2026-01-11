@@ -7,6 +7,56 @@ include("MapUtilities")
 
 Civ5MCP = Civ5MCP or {}
 
+-- Get all plots within a city's borders
+-- Reads current game state from Civ5 API
+
+Civ5MCP = Civ5MCP or {}
+
+-- Get plots for a city
+function Civ5MCP.GetCityPlots(city, playerID)
+    local plots = {}
+    local tilesOwned = 0
+    local tilesWorked = 0
+
+    -- Cities can work tiles within 3 hexes
+    for i = 0, city:GetNumCityPlots() - 1 do
+        local plot = city:GetCityIndexPlot(i)
+        if plot and plot:GetOwner() == playerID then
+            tilesOwned = tilesOwned + 1
+
+            local isWorked = city:IsWorkingPlot(plot)
+            if isWorked then
+                tilesWorked = tilesWorked + 1
+            end
+
+            local plotData = {
+                x = plot:GetX(),
+                y = plot:GetY(),
+                isWorked = isWorked,
+                yields = {
+                    food = plot:CalculateYield(YieldTypes.YIELD_FOOD, true),
+                    production = plot:CalculateYield(YieldTypes.YIELD_PRODUCTION, true),
+                    gold = plot:CalculateYield(YieldTypes.YIELD_GOLD, true),
+                    science = plot:CalculateYield(YieldTypes.YIELD_SCIENCE, true),
+                    culture = plot:CalculateYield(YieldTypes.YIELD_CULTURE, true),
+                    faith = plot:CalculateYield(YieldTypes.YIELD_FAITH, true)
+                },
+                terrain = GameInfo.Terrains[plot:GetTerrainType()].Type,
+                feature = plot:GetFeatureType() >= 0 and GameInfo.Features[plot:GetFeatureType()].Type or nil,
+                improvement = plot:GetImprovementType() >= 0 and GameInfo.Improvements[plot:GetImprovementType()].Type or
+                    nil,
+                resource = plot:GetResourceType() >= 0 and GameInfo.Resources[plot:GetResourceType()].Type or nil,
+                resourceType = plot:GetResourceType() >= 0 and
+                    GameInfo.Resources[plot:GetResourceType()].ResourceClassType or nil
+
+            }
+            table.insert(plots, plotData)
+        end
+    end
+
+    return plots, tilesOwned, tilesWorked
+end
+
 -- Get all cities for a player
 function Civ5MCP.GetCitiesByPlayer(playerID)
     local player = Players[playerID]
@@ -15,6 +65,8 @@ function Civ5MCP.GetCitiesByPlayer(playerID)
     local cities = {}
 
     for city in player:Cities() do
+        local plots, plotsOwned, plotsWorked = Civ5MCP.GetCityPlots(city, playerID)
+
         local cityData = {
             name = city:GetName(),
             population = city:GetPopulation(),
@@ -52,12 +104,12 @@ function Civ5MCP.GetCitiesByPlayer(playerID)
             x = city:GetX(),
             y = city:GetY(),
 
-            -- TODO: Tiles
-            -- A list of tiles within the city borders in the form:
-            -- { x = X, y = Y, yield =
-            --   { food = F, production = P, gold = G, science = S, culture = C, faith = Fa, IsWorked = B }
-            -- }
+            -- TODO: Plots
             -- Consider an isOverlapped flag if tile _could_ be worked by another city
+            plotOwned = plotsOwned,
+            plotsWorked = plotsWorked,
+            unemployedCitizens = math.max(0, city:GetPopulation() - plotsWorked - city:GetSpecialistCount()),
+            plots = plots
         }
 
         table.insert(cities, cityData)
