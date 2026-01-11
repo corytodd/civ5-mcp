@@ -107,7 +107,7 @@ function Civ5MCP.GetTechInfo(playerID)
         local techInfo = GameInfo.Technologies[currentTech]
         if techInfo then
             techs.currentResearch = techInfo.Type
-            techs.turnsUntilComplete = player:GetResearchTurnsLeft()
+            techs.turnsUntilComplete = player:GetResearchTurnsLeft(currentTech, true)
         end
     end
 
