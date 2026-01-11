@@ -24,12 +24,12 @@ DOCKER_RUN = docker run --rm -it \
 
 .PHONY: docker-lint
 docker-lint: ENTRYPOINT=make
-docker-build: ARGS=lint
+docker-lint: ARGS=lint
 docker-lint: .docker-run
 
 .PHONY: docker-test
 docker-test: ENTRYPOINT=make
-docker-build: ARGS=test
+docker-test: ARGS=test
 docker-test: .docker-run
 
 .PHONY: docker-build
