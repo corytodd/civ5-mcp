@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - "v*"
+permissions:
+  contents: write
 
 jobs:
   release:
@@ -12,9 +14,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # TODO: bundle image or use prebuilt image
+      - name: Build Image
+        run: docker build -t ci-image -f docker/Dockerfile .
+
       - name: Build Package
         run: |
-          docker build -t ci-image -f Docker/Dockerfile .
           docker run --rm -v ${{ github.workspace }}:/app ci-image ./tools/build.sh
 
       - name: Prepare Package for Release
@@ -60,6 +65,8 @@ jobs:
           body: ${{ steps.gen_body.outputs.release_body }}
           draft: false
           prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload release asset
         uses: actions/upload-release-asset@v1
@@ -68,3 +75,5 @@ jobs:
           asset_path: ${{ steps.prep_release.outputs.asset_path }}
           asset_name: ${{ steps.prep_release.outputs.asset_name }}
           asset_content_type: application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -13,7 +13,7 @@ jobs:
 
       # TODO: bundle image or use prebuilt image
       - name: Build Image
-        run: docker build -t ci-image -f Docker/Dockerfile .
+        run: docker build -t ci-image -f docker/Dockerfile .
 
       - name: Lint Lua files
         run: docker run --rm -v ${{ github.workspace }}:/app ci-image ./tools/lint.sh
