@@ -1,5 +1,63 @@
 # Civ 5 MCP
 
+Connect your Civ 5 game to an agent using MCP. This mod creates an IPC channel
+between your game session and an exposes the context in format that can be
+consumed by your agent.
+
+The spirit of this mod is to provide access only to what a human player would
+reasonable know. For example, we try to not leak the location of wonders or
+unmet players. The scope of the context is focused on making a super-advisor
+to help you get better at this game.
+
+The project is composed of two pieces. The game mod, aka the Bridge, and the
+MCP server. You must use both in order to to use this mod.
+
+> [!NOTE]
+> This has only been tested on Brave New World on Windows.
+
+## Trying this out
+
+1. Download the latest release and unzip the contents to your MODS directory.
+Typically this is 
+`%USERPROFILE%\Documents\My Games\Sid Meier's Civilization 5\Mods`.
+  - The directory should look like
+```
+MODS/
+  Civ5MCP_Bridge (v VERSION)/
+      Civ5MCP_Bridge.modinfo
+      ... a bunch of .lua files ...
+```
+2. Launch your game
+3. Selects MODS
+4. Check the little button to enable this mod
+5. Configure your game
+6. Configure your agent to run `server/civ5_mcp_server.py`
+7. Enjoy
+
+## Development
+
+### Build
+
+The modinfo and constants file are generated at build time. `mod_config.json`
+describes the mod and files that will be exported in the format Civ 5 expects.
+
+```
+# All targets have a docker- variant, e.g. make docker-lint
+
+# Get nagged
+make lint
+
+# Run unit tests
+make test
+
+# Produces a directory that Civ 5 can read
+make build
+
+# Optional: automatically deploy to your Civ 5 MODS folder
+./tools/deploy.ps1
+```
+
+
 ## Bridge
 
 Game state is at the start of each turn and written to a SQLite database. Each
@@ -29,18 +87,6 @@ CREATE TABLEMCP_GameConfiguration (
 The bridge runs in a Lua 5.1.4 sandboxed with a very limited API. The game
 exposes [this API][Civ5LuaAPI] and that's about all we can use.
 
-## Build
-
-The modinfo and constants file are generated at build time. `mod_config.json`
-describes the mod and files that will be exported in the format Civ 5 expects.
-
-```
-# Produces a directory that Civ 5 can read
-python3 ./tools/build.py
-
-# Optional: automatically deploy to your Civ 5 MODS folder
-./tools/deploy.ps1
-```
 
 ## Running the Server
 
