@@ -1,0 +1,4 @@
+dist/
+
+# Auto-generated files
+src/Civ5MCP_Constants.lua
