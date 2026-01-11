@@ -7,6 +7,17 @@ include("MapUtilities")
 
 Civ5MCP = Civ5MCP or {}
 
+local FOCUS_TYPES = {
+    [-1] = "FOCUS_TYPE_NONE",
+    [0] = "FOCUS_TYPE_FOOD",
+    [1] = "FOCUS_TYPE_PRODUCTION",
+    [2] = "FOCUS_TYPE_GOLD",
+    [3] = "FOCUS_TYPE_SCIENCE",
+    [4] = "FOCUS_TYPE_CULTURE",
+    [5] = "FOCUS_TYPE_GREAT_PEOPLE",
+    [6] = "FOCUS_TYPE_FAITH"
+}
+
 -- Get feature type of a plot or nil
 function Civ5MCP.GetFeature(plot)
     local featureType = plot:GetFeatureType()
@@ -80,6 +91,10 @@ function Civ5MCP.GetCityPlots(city, playerID)
     return plots, tilesOwned, tilesWorked
 end
 
+function Civ5MCP.GetCityFocus(city)
+    return FOCUS_TYPES[city:GetFocusType()] or "UNKNOWN"
+end
+
 -- Get all cities for a player
 function Civ5MCP.GetCitiesByPlayer(playerID)
     local player = Players[playerID]
@@ -96,6 +111,7 @@ function Civ5MCP.GetCitiesByPlayer(playerID)
             turnsUntilGrowth = city:GetFoodTurnsLeft(),
             isGrowing = city:GetFoodTurnsLeft() > 0,
             isStarving = city:FoodDifference() < 0,
+            focus = Civ5MCP.GetCityFocus(city),
 
             -- Yields
             yields = {
