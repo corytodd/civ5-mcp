@@ -8,6 +8,9 @@ globals = {
     "Teams",
     "GameInfo",
     "GameDefines",
+    "Locale",
+    "PreGame",
+    "MapUtilities",
 
     -- Enums
     "YieldTypes",

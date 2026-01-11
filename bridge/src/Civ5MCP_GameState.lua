@@ -54,7 +54,9 @@ function Civ5MCP.GetCitiesByPlayer(playerID)
 
             -- TODO: Tiles
             -- A list of tiles within the city borders in the form:
-            -- { x = X, y = Y, yield = { food = F, production = P, gold = G, science = S, culture = C, faith = Fa, IsWorked = B } }
+            -- { x = X, y = Y, yield =
+            --   { food = F, production = P, gold = G, science = S, culture = C, faith = Fa, IsWorked = B }
+            -- }
             -- Consider an isOverlapped flag if tile _could_ be worked by another city
         }
 
@@ -138,32 +140,32 @@ function Civ5MCP.GetOpponents()
 end
 
 -- Return game difficulty as string
-function GetGameDifficulty()
+function Civ5MCP.GetGameDifficulty()
     local diffInfo = GameInfo.HandicapInfos[Players[Game.GetActivePlayer()]:GetHandicapType()]
     return Locale.ConvertTextKey(diffInfo.Description)
 end
 
 -- Return game speed as string
-function GetGameSpeed()
+function Civ5MCP.GetGameSpeed()
     local speedInfo = GameInfo.GameSpeeds[PreGame.GetGameSpeed()]
     return Locale.ConvertTextKey(speedInfo.Description)
 end
 
 -- Return map name as string
-function GetMapName()
+function Civ5MCP.GetMapName()
     local mapScript = PreGame.GetMapScript()
     local mapInfo = MapUtilities.GetBasicInfo(mapScript)
     return Locale.Lookup(mapInfo.Name)
 end
 
 -- Return map size as string
-function GetMapSize()
+function Civ5MCP.GetMapSize()
     local worldInfo = GameInfo.Worlds[PreGame.GetWorldSize()]
     return Locale.ConvertTextKey(worldInfo.Description)
 end
 
 -- Return number of major civilizations in the game
-function GetMajorCivCount()
+function Civ5MCP.GetMajorCivCount()
     local count = 0
     for playerID = 0, GameDefines.MAX_MAJOR_CIVS - 1 do
         local pPlayer = Players[playerID]
@@ -175,7 +177,7 @@ function GetMajorCivCount()
 end
 
 -- Return number of minor civilizations (city-states) in the game
-function GetMinorCivCount()
+function Civ5MCP.GetMinorCivCount()
     local count = 0
     for playerID = GameDefines.MAX_MAJOR_CIVS, GameDefines.MAX_PLAYERS - 1 do
         local pPlayer = Players[playerID]
@@ -207,11 +209,11 @@ function Civ5MCP.GetGameConfiguration(playerID)
     return {
         name = player:GetName(),
         civilization = player:GetCivilizationShortDescription(),
-        difficulty = GetGameDifficulty(),
-        gameSpeed = GetGameSpeed(),
-        mapName = GetMapName(),
-        mapSize = GetMapSize(),
-        majorCivCount = GetMajorCivCount(),
-        minorCivCount = GetMinorCivCount()
+        difficulty = Civ5MCP.GetGameDifficulty(),
+        gameSpeed = Civ5MCP.GetGameSpeed(),
+        mapName = Civ5MCP.GetMapName(),
+        mapSize = Civ5MCP.GetMapSize(),
+        majorCivCount = Civ5MCP.GetMajorCivCount(),
+        minorCivCount = Civ5MCP.GetMinorCivCount()
     }
 end
