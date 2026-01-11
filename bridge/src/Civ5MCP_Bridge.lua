@@ -45,6 +45,18 @@ local function InitializeDatabase()
         );
     ]]) do end
 
+    for _ in g_UserData.Query([[
+        CREATE VIEW current_game_state AS
+        SELECT
+            session_id,
+            turn,
+            data,
+            timestamp
+        FROM MCP_GameHistory
+        ORDER BY timestamp DESC
+        LIMIT 1;
+    ]]) do end
+
     g_SessionID = GenerateSessionID()
 
     print(string.format("MCP: Database initialized with session ID: %s", g_SessionID))
