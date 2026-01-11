@@ -8,7 +8,8 @@ RUN apt-get update && \
     liblua5.1-0-dev \
     luarocks \
     gcc \
-    libc6-dev && \
+    libc6-dev \
+    python3 && \
     luarocks install luacheck && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

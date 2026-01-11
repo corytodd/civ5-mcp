@@ -1,0 +1,25 @@
+name: Build & Test
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # TODO: bundle image or use prebuilt image
+      - name: Build Image
+        run: docker build -t ci-image -f Docker/Dockerfile .
+
+      - name: Lint Lua files
+        run: docker run --rm -v ${{ github.workspace }}:/app ci-image ./tools/lint.sh
+
+      - name: Run Tests
+        run: docker run --rm -v ${{ github.workspace }}:/app ci-image ./tools/test.sh
+
+      - name: Build Package
+        run: docker run --rm -v ${{ github.workspace }}:/app ci-image ./tools/build.sh

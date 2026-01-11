@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Package
+        run: |
+          docker build -t ci-image -f Docker/Dockerfile .
+          docker run --rm -v ${{ github.workspace }}:/app ci-image ./tools/build.sh
+
+      - name: Prepare Package for Release
+        id: prep_release
+        run: |
+          set -euo pipefail
+          cd "${GITHUB_WORKSPACE}/dist" || { echo "dist directory not found"; exit 1; }
+          dir=$(ls -d Civ5MCP_Bridge* 2>/dev/null | head -n1)
+          if [ -z "$dir" ]; then echo "No matching Civ5MCP_Bridge* directory found in dist" >&2; exit 1; fi
+          zip_name="${dir}.zip"
+          zip -r -q "${GITHUB_WORKSPACE}/${zip_name}" "$dir"
+          echo "asset_path=${GITHUB_WORKSPACE}/${zip_name}" >> "$GITHUB_OUTPUT"
+          echo "asset_name=${zip_name}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate Release Notes
+        id: gen_body
+        run: |
+          set -euo pipefail
+          # ensure tags and history are available
+          git fetch --prune --unshallow --tags || git fetch --prune --tags || true
+
+          if git tag --list | grep . >/dev/null 2>&1; then
+            last_tag=$(git describe --tags --abbrev=0)
+            shortlog=$(git shortlog --no-merges "${last_tag}..HEAD" || true)
+          else
+            shortlog=$(git shortlog --no-merges HEAD || true)
+          fi
+
+          if [ -z "${shortlog}" ]; then
+            shortlog="No changes since last tag."
+          fi
+
+          echo "release_body<<EOF" >> "$GITHUB_OUTPUT"
+          echo "${shortlog}" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: ${{ github.ref_name }}
+          body: ${{ steps.gen_body.outputs.release_body }}
+          draft: false
+          prerelease: false
+
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.prep_release.outputs.asset_path }}
+          asset_name: ${{ steps.prep_release.outputs.asset_name }}
+          asset_content_type: application/zip
