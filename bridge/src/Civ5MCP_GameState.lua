@@ -1,12 +1,14 @@
 -- Civ5 MCP Game State Reader
 -- Reads current game state from Civ5 API
+-- The golden rule to remember is to not provide oracles into hidden information.
+-- Only provide information that the human player would reasonably know.
 
 include("MapUtilities")
 
 Civ5MCP = Civ5MCP or {}
 
--- Get visible cities for a player
-function Civ5MCP.GetVisibleCities(playerID)
+-- Get all cities for a player
+function Civ5MCP.GetCitiesByPlayer(playerID)
     local player = Players[playerID]
     if not player then return {} end
 
@@ -56,8 +58,8 @@ function Civ5MCP.GetVisibleCities(playerID)
     return cities
 end
 
--- Get player info
-function Civ5MCP.GetPlayerInfo(playerID)
+-- Get global player info (as opposed to city-specific)
+function Civ5MCP.GetInfoByPlayer(playerID)
     local player = Players[playerID]
     if not player then return {} end
 
@@ -82,8 +84,8 @@ function Civ5MCP.GetPlayerInfo(playerID)
     }
 end
 
--- Get tech info
-function Civ5MCP.GetTechInfo(playerID)
+-- Get tech info by player
+function Civ5MCP.GetTechInfoByPlayer(playerID)
     local player = Players[playerID]
     if not player then return {} end
 
@@ -114,42 +116,47 @@ function Civ5MCP.GetTechInfo(playerID)
     return techs
 end
 
--- Get city-state quests
+-- TODO: Get city-state quests
 function Civ5MCP.GetCityStateQuests(_playerID)
     -- City-state quests may not be accessible from InGameUIAddin context
     -- Return empty array for now
     return {}
 end
 
--- Get opponents info
+-- TODO: Get opponents info
 function Civ5MCP.GetOpponents()
     -- Not implemented yet
-    -- A list of opponent players
+    -- A list of opponent players _currently known to the human player_
     -- name, civilization, relationship status, war/peace status, etc.
     return {}
 end
 
+-- Return game difficulty as string
 function GetGameDifficulty()
     local diffInfo = GameInfo.HandicapInfos[Players[Game.GetActivePlayer()]:GetHandicapType()]
     return Locale.ConvertTextKey(diffInfo.Description)
 end
 
+-- Return game speed as string
 function GetGameSpeed()
     local speedInfo = GameInfo.GameSpeeds[PreGame.GetGameSpeed()]
     return Locale.ConvertTextKey(speedInfo.Description)
 end
 
+-- Return map name as string
 function GetMapName()
     local mapScript = PreGame.GetMapScript()
     local mapInfo = MapUtilities.GetBasicInfo(mapScript)
     return Locale.Lookup(mapInfo.Name)
 end
 
+-- Return map size as string
 function GetMapSize()
     local worldInfo = GameInfo.Worlds[PreGame.GetWorldSize()]
     return Locale.ConvertTextKey(worldInfo.Description)
 end
 
+-- Return number of major civilizations in the game
 function GetMajorCivCount()
     local count = 0
     for playerID = 0, GameDefines.MAX_MAJOR_CIVS - 1 do
@@ -161,6 +168,7 @@ function GetMajorCivCount()
     return count
 end
 
+-- Return number of minor civilizations (city-states) in the game
 function GetMinorCivCount()
     local count = 0
     for playerID = GameDefines.MAX_MAJOR_CIVS, GameDefines.MAX_PLAYERS - 1 do
@@ -176,16 +184,16 @@ end
 function Civ5MCP.GetGameState(playerID)
     return {
         turn = Game.GetGameTurn(),
-        player = Civ5MCP.GetPlayerInfo(playerID),
-        cities = Civ5MCP.GetVisibleCities(playerID),
-        tech = Civ5MCP.GetTechInfo(playerID),
+        player = Civ5MCP.GetInfoByPlayer(playerID),
+        cities = Civ5MCP.GetCitiesByPlayer(playerID),
+        tech = Civ5MCP.GetTechInfoByPlayer(playerID),
         cityStateQuests = Civ5MCP.GetCityStateQuests(playerID),
         opponents = Civ5MCP.GetOpponents(),
         exportTime = os.date("%Y-%m-%d %H:%M:%S")
     }
 end
 
--- Get game setup info
+-- Get game setup info. This is slow to call; use sparingly.
 function Civ5MCP.GetGameConfiguration(playerID)
     local player = Players[playerID]
     if not player then return {} end
