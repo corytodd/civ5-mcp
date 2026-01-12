@@ -57,6 +57,11 @@ make build
 ./tools/deploy.ps1
 ```
 
+### Versioning
+
+The lua rockspec and Civ version formats are different. Civ wants to see a
+string without any dots or dashes. Therefore, the Civ version will strip off
+the revision and concat the major.minor into `major * 10 + minor`.
 
 ## Bridge
 

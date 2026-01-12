@@ -22,16 +22,19 @@ def find_rockspec(start_path):
     return None
 
 
-def get_version_from_rockspec(rockspec_path):
+def format_version_from_rockspec(rockspec_path):
     """Extract version string from a .rockspec file."""
+    version = "0"
     with open(rockspec_path, "r", encoding="utf-8") as f:
         for line in f:
-            if line.strip().startswith("version"):
-                parts = line.split("=")
-                if len(parts) == 2:
-                    version = parts[1].strip().strip('"').strip("'")
-                    return version
-    return "0.0.0"
+            # Convert Lua version format to Civ version format
+            # Chop off the revision and concat the version into one number
+            line = line.replace('"', "").strip()
+            if line.startswith("version"):
+                lua_version = line.split("=")[-1].strip()
+                version = "".join(lua_version.split("-")[0].split("."))
+                break
+    return version
 
 
 def calculate_md5(file_path):
@@ -143,7 +146,7 @@ def main():
     if not rockspec_path:
         raise FileNotFoundError("No .rockspec file found in 'bridge' directory")
 
-    version = get_version_from_rockspec(rockspec_path)
+    version = format_version_from_rockspec(rockspec_path)
     config["mod"]["version"] = version
 
     src_dir = Path(config["build"]["src_dir"])
