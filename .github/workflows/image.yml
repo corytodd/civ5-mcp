@@ -6,6 +6,10 @@ on:
       - "Dockerfile"
       - "**/Dockerfile"
       - "docker/**"
+    branches:
+      - main
+    tags-ignore:
+      - "**" # Ignore all tags
   workflow_dispatch:
 
 permissions:
