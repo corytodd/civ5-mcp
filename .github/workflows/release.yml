@@ -35,47 +35,12 @@ jobs:
           echo "asset_name=${zip_name}" >> "$GITHUB_OUTPUT"
         shell: bash
 
-      - name: Generate Release Notes
-        id: gen_body
-        run: |
-          set -euo pipefail
-          # ensure tags and history are available
-          git fetch --prune --unshallow --tags || git fetch --prune --tags || true
-
-          if git tag --list | grep . >/dev/null 2>&1; then
-            last_tag=$(git describe --tags --abbrev=0)
-            shortlog=$(git shortlog --no-merges "${last_tag}..HEAD" || true)
-          else
-            shortlog=$(git shortlog --no-merges HEAD || true)
-          fi
-
-          if [ -z "${shortlog}" ]; then
-            shortlog="No changes since last tag."
-          fi
-
-          echo "release_body<<EOF" >> "$GITHUB_OUTPUT"
-          echo "${shortlog}" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
-        shell: bash
-
       - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref_name }}
-          release_name: ${{ github.ref_name }}
-          body: ${{ steps.gen_body.outputs.release_body }}
+          generate_release_notes: true
+          files: ${{ steps.prep_release.outputs.asset_path }}
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload release asset
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.prep_release.outputs.asset_path }}
-          asset_name: ${{ steps.prep_release.outputs.asset_name }}
-          asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
