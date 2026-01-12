@@ -14,7 +14,7 @@ from mcp.server import NotificationOptions, Server
 from mcp.server.stdio import stdio_server
 from mcp import types
 
-
+# TODO: learn db version from mod config
 # Path to Civ5 modding database
 CIV5_DB_PATH = (
     Path.home()
@@ -22,7 +22,7 @@ CIV5_DB_PATH = (
     / "My Games"
     / "Sid Meier's Civilization 5"
     / "ModUserData"
-    / "Civ5 MCP Bridge-1.db"
+    / "Civ5 MCP Bridge-11.db"
 )
 
 # MCP Server instance
