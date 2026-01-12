@@ -1,5 +1,5 @@
 package = "Civ5MCP"
-version = "1.0-1"
+version = "1.1-1"
 rockspec_format = "3.0"
 
 source = {
