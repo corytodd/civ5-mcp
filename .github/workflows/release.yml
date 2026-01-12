@@ -33,6 +33,7 @@ jobs:
           zip -r -q "${GITHUB_WORKSPACE}/${zip_name}" "$dir"
           echo "asset_path=${GITHUB_WORKSPACE}/${zip_name}" >> "$GITHUB_OUTPUT"
           echo "asset_name=${zip_name}" >> "$GITHUB_OUTPUT"
+        shell: bash
 
       - name: Generate Release Notes
         id: gen_body
@@ -55,6 +56,7 @@ jobs:
           echo "release_body<<EOF" >> "$GITHUB_OUTPUT"
           echo "${shortlog}" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
+        shell: bash
 
       - name: Create GitHub Release
         id: create_release
