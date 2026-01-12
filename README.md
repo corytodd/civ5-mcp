@@ -4,6 +4,8 @@ Connect your Civ 5 game to an agent using MCP. This mod creates an IPC channel
 between your game session and an exposes the context in format that can be
 consumed by your agent.
 
+See some [samples](samples/samples.md).
+
 The spirit of this mod is to provide access only to what a human player would
 reasonable know. For example, we try to not leak the location of wonders or
 unmet players. The scope of the context is focused on making a super-advisor
