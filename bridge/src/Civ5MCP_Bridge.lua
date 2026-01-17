@@ -91,7 +91,7 @@ local function SaveGameConfiguration()
     local insertMetaQuery = string.format([[
         INSERT INTO MCP_GameConfiguration(session_id, data)
         VALUES('%s', '%s');
-    ]], escapedSessionID:gsub("'", "''"), escapedJson)
+    ]], escapedSessionID, escapedJson)
 
     for _ in g_UserData.Query(insertMetaQuery) do end
 
