@@ -70,23 +70,7 @@ the revision and concat the major.minor into `major * 10 + minor`.
 Game state is at the start of each turn and written to a SQLite database. Each
 new game is stored as a new session. The session and turn number are used as the
 state's id. Turn history and the initial game configuration are stored using
-this session id. The schemas are as follows:
-
-```
--- Schema version: 2026-01-10
-CREATE TABLE MCP_GameHistory (
-    session_id TEXT,
-    turn INTEGER,
-    data TEXT NOT NULL,
-    timestamp TEXT DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (session_id, turn)
-);
-
-CREATE TABLEMCP_GameConfiguration (
-    session_id TEXT PRIMARY KEY,
-    data TEXT NOT NULL
-);
-```
+this session id.
 
 > [!WARNING]
 > The `data` field is a JSON blob that is considered unstable!
