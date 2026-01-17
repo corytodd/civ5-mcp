@@ -33,7 +33,8 @@ globals = {
 
     -- Constants (from generated file)
     "MOD_ID",
-    "MOD_NAME"
+    "MOD_NAME",
+    "MOD_GAME_RULES",
 }
 
 -- Allow unused arguments prefixed with underscore

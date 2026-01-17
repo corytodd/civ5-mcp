@@ -4,6 +4,7 @@
 include("Civ5MCP_Constants.lua")
 include("Civ5MCP_Json.lua")
 include("Civ5MCP_GameState.lua")
+include("Civ5MCP_GameRules.lua")
 
 Civ5MCP = Civ5MCP or {}
 
@@ -45,6 +46,13 @@ local function InitializeDatabase()
         );
     ]]) do end
 
+    for _ in g_UserData.Query([[
+        CREATE TABLE IF NOT EXISTS MCP_GameRules (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            rule_text TEXT NOT NULL
+        );
+    ]]) do end
+
     g_SessionID = GenerateSessionID()
 
     print(string.format("MCP: Database initialized with session ID: %s", g_SessionID))
@@ -71,6 +79,24 @@ local function SaveGameConfiguration()
     for _ in g_UserData.Query(insertMetaQuery) do end
 
     print(string.format("MCP: Game setup saved for session ID: %s", g_SessionID))
+end
+
+local function SaveGameRules()
+    if not g_UserData then
+        InitializeDatabase()
+        assert(g_UserData, "Failed to initialize MCP database")
+    end
+
+    -- This is a one time save; clear existing rules first
+    for _ in g_UserData.Query("DELETE FROM MCP_GameRules;") do end
+    local escapedRules = MOD_GAME_RULES:gsub("'", "''")
+    local insertRulesQuery = string.format([[
+        INSERT INTO MCP_GameRules(rule_text)
+        VALUES('%s');
+    ]], escapedRules)
+    for _ in g_UserData.Query(insertRulesQuery) do end
+
+    print("MCP: Game rules saved to database")
 end
 
 -- Main export function
@@ -130,6 +156,7 @@ Events.SequenceGameInitComplete.Add(function()
     -- TODO: how to detect new game vs loaded game?
     ExportGameState()
     SaveGameConfiguration()
+    SaveGameRules()
     print("MCP: Game State Bridge loaded successfully!", os.clock())
 end)
 

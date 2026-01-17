@@ -125,6 +125,31 @@ def generate_modinfo(config, file_md5s):
     return mod
 
 
+def generate_game_rules(config, game_rules_path):
+    """Generate Civ5MCP_GameRules.lua from config."""
+    files_to_include = []
+    for rule in config.get("game_rules", []):
+        if not rule.get("file"):
+            raise Exception("Game rules entry missing 'file' field")
+        file_path = Path("bridge/src") / rule["file"]
+        if not file_path.exists():
+            raise FileNotFoundError(f"Game rules file {file_path} not found")
+        files_to_include.append(file_path)
+
+    with open(Path(game_rules_path), "w", encoding="utf-8") as f:
+        f.write("-- This file is auto-generated during the build process.\n")
+        f.write("MOD_GAME_RULES = [[\n")
+        for file_path in files_to_include:
+            with open(file_path, "r", encoding="utf-8") as rule_file:
+                for line in rule_file:
+                    line = line.strip()
+                    if not line or line.startswith("--"):
+                        continue
+                    f.write(line)
+                    f.write("\n")
+        f.write("]]\n")
+
+
 def prettify_xml(elem):
     """Return a pretty-printed XML string."""
     rough_string = ET.tostring(elem, encoding="utf-8")
@@ -163,6 +188,9 @@ def main():
 
     constants_path = src_dir / "Civ5MCP_Constants.lua"
     generate_constants_file(config, constants_path)
+
+    game_rules_path = src_dir / "Civ5MCP_GameRules.lua"
+    generate_game_rules(config, game_rules_path)
 
     file_md5s = {}
     for file_info in config["files"]:

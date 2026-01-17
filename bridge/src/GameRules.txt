@@ -1,0 +1,5 @@
+-- Comments and empty lines are ignored
+-- Extra rules for the agent to follow
+
+The coordinate system places origin in the bottom-left. Positive X is East, Positive Y is North.
+Leaving a production tile open before growth, when growth is the focus, is an optimal min/max strategy.
