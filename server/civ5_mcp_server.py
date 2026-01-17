@@ -199,6 +199,21 @@ class Civ5GameStateDB:
                 return None
             return json.loads(row[0])
 
+    def get_game_rules(self) -> Optional[dict]:
+        """Get game rules"""
+        with self._connect() as conn:
+            cursor = conn.execute(
+                """
+                SELECT rule_text
+                FROM MCP_GameRules
+                LIMIT 1
+            """
+            )
+            row = cursor.fetchone()
+            if not row:
+                return None
+            return {"rules": [line for line in row[0].splitlines() if line.strip()]}
+
 
 # Global database instance
 db = Civ5GameStateDB(CIV5_DB_PATH)
@@ -274,6 +289,11 @@ async def list_tools() -> list[types.Tool]:
                 },
             },
         ),
+        types.Tool(
+            name="get_game_rules",
+            description="Get the game rules to give context",
+            inputSchema={"type": "object", "properties": {}},
+        ),
     ]
 
 
@@ -341,6 +361,18 @@ async def call_tool(name: str, arguments: Any) -> list[types.TextContent]:
                 ]
 
             return [types.TextContent(type="text", text=json.dumps(config, indent=2))]
+
+        elif name == "get_game_rules":
+            rules = db.get_game_rules()
+            if not rules:
+                return [
+                    types.TextContent(
+                        type="text",
+                        text="No game rules found. Make sure Civ 5 is running with the MCP mod enabled.",
+                    )
+                ]
+
+            return [types.TextContent(type="text", text=json.dumps(rules, indent=2))]
 
         else:
             return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
