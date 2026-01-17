@@ -11,14 +11,31 @@ Civ5MCP = Civ5MCP or {}
 local g_UserData = nil
 local g_SessionID = nil
 
--- Generate a unique session ID for this game
-local function GenerateSessionID()
-    local player = Players[Game.GetActivePlayer()]
-    local playerName = player and player:GetName() or "Unknown"
-    local gameStartTurn = Game.GetStartTurn()
-    local timestamp = os.date("%Y%m%d_%H%M%S")
+-- Load session id from game save or return a unique session ID if not found
+local function GetSessionID()
+    local keySessionId = "Civ5MCP_session_id"
+    local saveData = Modding.OpenSaveData()
+    if not saveData then
+        print("MCP: Unable to open save data for session ID retrieval")
+        return nil
+    end
 
-    return string.format("%s_%s_T%d", timestamp, playerName:gsub("%s+", "_"), gameStartTurn)
+    local sessionID = saveData.GetValue(keySessionId)
+
+    if sessionID then
+        sessionID = tostring(sessionID)
+        print("MCP: Retrieved session ID from save data:", sessionID)
+    else
+        -- Create a new session ID based on player name and start turn
+        local player = Players[Game.GetActivePlayer()]
+        local playerName = player and player:GetName() or "Unknown"
+        local timestamp = os.date("%Y%m%d_%H%M%S")
+
+        sessionID = string.format("%s_%s", timestamp, playerName:gsub("%s+", "_"))
+        saveData.SetValue(keySessionId, sessionID)
+        print("MCP: Generated new session ID:", sessionID)
+    end
+    return sessionID
 end
 
 -- Initialize database tables
@@ -53,9 +70,9 @@ local function InitializeDatabase()
         );
     ]]) do end
 
-    g_SessionID = GenerateSessionID()
+    g_SessionID = GetSessionID()
 
-    print(string.format("MCP: Database initialized with session ID: %s", g_SessionID))
+    print(string.format("MCP: Database initialized"))
 end
 
 local function SaveGameConfiguration()
@@ -153,7 +170,6 @@ Events.SequenceGameInitComplete.Add(function()
   \_____|_| \_/   |____/  |_|  |_|\_____|_|
 ]])
 
-    -- TODO: how to detect new game vs loaded game?
     ExportGameState()
     SaveGameConfiguration()
     SaveGameRules()
