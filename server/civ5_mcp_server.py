@@ -22,7 +22,7 @@ CIV5_DB_PATH = (
     / "My Games"
     / "Sid Meier's Civilization 5"
     / "ModUserData"
-    / "Civ5 MCP Bridge-11.db"
+    / "Civ5 MCP Bridge-12.db"
 )
 
 # MCP Server instance
