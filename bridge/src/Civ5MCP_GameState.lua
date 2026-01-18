@@ -144,15 +144,6 @@ function Civ5MCP.GetCitiesByPlayer(playerID)
             -- Specialists
             totalSpecialists = city:GetSpecialistCount(),
 
-            -- Great People progress
-            -- TODO: this function will crash when starting from non-ancient era
-            greatPeopleProgress = {
-                rate = city:GetGreatPeopleRate(),
-                turnsUntilNext = city:GetGreatPeopleRate() > 0 and
-                    math.ceil((player:GetGreatPeopleThresholdModifier() - city:GetGreatPeopleProgress()) /
-                        city:GetGreatPeopleRate()) or -1
-            },
-
             -- Location
             x = city:GetX(),
             y = city:GetY(),
