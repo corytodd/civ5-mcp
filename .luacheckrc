@@ -32,9 +32,9 @@ globals = {
     "Civ5MCP",
 
     -- Constants (from generated file)
-    "MOD_ID",
-    "MOD_NAME",
-    "MOD_GAME_RULES",
+    "CIV5MCP_MOD_ID",
+    "CIV5MCP_MOD_NAME",
+    "CIV5MCP_MOD_GAME_RULES",
 }
 
 -- Allow unused arguments prefixed with underscore

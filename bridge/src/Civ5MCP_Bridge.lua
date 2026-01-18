@@ -44,7 +44,7 @@ local function InitializeDatabase()
         return -- Already initialized
     end
 
-    g_UserData = Modding.OpenUserData(MOD_NAME, Modding.GetActivatedModVersion(MOD_ID))
+    g_UserData = Modding.OpenUserData(CIV5MCP_MOD_NAME, Modding.GetActivatedModVersion(CIV5MCP_MOD_ID))
 
     for _ in g_UserData.Query([[
         CREATE TABLE IF NOT EXISTS MCP_GameHistory(
@@ -106,7 +106,7 @@ local function SaveGameRules()
 
     -- This is a one time save; clear existing rules first
     for _ in g_UserData.Query("DELETE FROM MCP_GameRules;") do end
-    local escapedRules = MOD_GAME_RULES:gsub("'", "''")
+    local escapedRules = CIV5MCP_MOD_GAME_RULES:gsub("'", "''")
     local insertRulesQuery = string.format([[
         INSERT INTO MCP_GameRules(rule_text)
         VALUES('%s');
