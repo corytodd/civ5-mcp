@@ -55,8 +55,8 @@ def generate_constants_file(config, output_path):
     """Generate a Lua constants file with the mod ID."""
     content = io.StringIO()
     content.write("-- This file is auto-generated during the build process.\n")
-    content.write(f'\nMOD_ID = "{config["mod"]["id"]}";\n')
-    content.write(f'\nMOD_NAME = "{config["properties"]["name"]}";\n')
+    content.write(f'\nCIV5MCP_MOD_ID = "{config["mod"]["id"]}";\n')
+    content.write(f'\nCIV5MCP_MOD_NAME = "{config["properties"]["name"]}";\n')
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(content.getvalue())
@@ -138,7 +138,7 @@ def generate_game_rules(config, game_rules_path):
 
     with open(Path(game_rules_path), "w", encoding="utf-8") as f:
         f.write("-- This file is auto-generated during the build process.\n")
-        f.write("MOD_GAME_RULES = [[\n")
+        f.write("CIV5MCP_MOD_GAME_RULES = [[\n")
         for file_path in files_to_include:
             with open(file_path, "r", encoding="utf-8") as rule_file:
                 for line in rule_file:
