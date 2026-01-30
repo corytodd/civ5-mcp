@@ -1,8 +1,7 @@
 # Civ 5 MCP
 
 Connect your Civ 5 game to an agent using MCP. This mod creates an IPC channel
-between your game session and an exposes the context in format that can be
-consumed by your agent.
+from your real-time game to an MCP server that your agent can interact with.
 
 See some [samples](samples/samples.md).
 
