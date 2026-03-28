@@ -7,6 +7,8 @@ Exposes Civ 5 game state via Model Context Protocol
 import json
 import sqlite3
 import os
+import subprocess
+import tomllib
 from pathlib import Path
 from typing import Any, Optional
 from mcp.server.models import InitializationOptions
@@ -24,6 +26,24 @@ CIV5_DB_PATH = (
     / "ModUserData"
     / "Civ5 MCP Bridge-12.db"
 )
+
+def _git_version_suffix() -> str:
+    repo = Path(__file__).parent
+    try:
+        sha = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=repo, stderr=subprocess.DEVNULL,
+        ).decode().strip()
+        dirty = subprocess.call(
+            ["git", "diff", "--quiet"],
+            cwd=repo, stderr=subprocess.DEVNULL,
+        ) != 0
+        return f"+{sha}{'dirty' if dirty else ''}"
+    except Exception:
+        return ""
+
+_pyproject = tomllib.loads((Path(__file__).parent / "pyproject.toml").read_text())
+SERVER_VERSION = _pyproject["project"]["version"] + _git_version_suffix()
 
 # MCP Server instance
 app = Server("civ5-mcp")
@@ -252,7 +272,7 @@ async def list_tools() -> list[types.Tool]:
                     },
                     "limit": {
                         "type": "number",
-                        "description": "Maximum number of turns to retrieve (default: 100)",
+                        "description": "Maximum number of turns to retrieve (default: 10)",
                     },
                 },
             },
@@ -296,6 +316,11 @@ async def list_tools() -> list[types.Tool]:
         types.Tool(
             name="get_game_rules",
             description="Get the game rules to give context",
+            inputSchema={"type": "object", "properties": {}},
+        ),
+        types.Tool(
+            name="get_server_info",
+            description="Get the MCP server version and database path",
             inputSchema={"type": "object", "properties": {}},
         ),
     ]
@@ -378,6 +403,13 @@ async def call_tool(name: str, arguments: Any) -> list[types.TextContent]:
 
             return _json_response(rules)
 
+        elif name == "get_server_info":
+            return _json_response({
+                "server_version": SERVER_VERSION,
+                "db_path": str(CIV5_DB_PATH),
+                "db_exists": CIV5_DB_PATH.exists(),
+            })
+
         else:
             return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
 
@@ -393,7 +425,7 @@ async def main():
             write_stream,
             InitializationOptions(
                 server_name="civ5-mcp",
-                server_version="0.1.0",
+                server_version=SERVER_VERSION,
                 capabilities=app.get_capabilities(
                     notification_options=NotificationOptions(),
                     experimental_capabilities={},
