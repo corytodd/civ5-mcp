@@ -239,8 +239,32 @@ class Civ5GameStateDB:
 db = Civ5GameStateDB(CIV5_DB_PATH)
 
 
+_PROP_SESSION_ID = {
+    "type": "string",
+    "description": "Optional session ID. If not provided, uses the most recent session.",
+}
+_PROP_INCLUDE_ALL_PLOTS = {
+    "type": "boolean",
+    "description": "Include all map plots (caution: expensive). By default only worked, improved, or resource plots are returned.",
+}
+
+
 def _json_response(data) -> list[types.TextContent]:
     return [types.TextContent(type="text", text=json.dumps(data))]
+
+
+def _filter_plots(state: dict) -> dict:
+    for city in state.get("cities", []):
+        city["plots"] = [
+            p for p in city.get("plots", [])
+            if p.get("isWorked") or p.get("resource") or p.get("improvement")
+        ]
+    for unit in state.get("units", []):
+        unit["visiblePlots"] = [
+            p for p in unit.get("visiblePlots", [])
+            if p.get("isSelf") or p.get("unitOnPlot") or p.get("improvement")
+        ]
+    return state
 
 
 @app.list_tools()
@@ -253,10 +277,8 @@ async def list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "session_id": {
-                        "type": "string",
-                        "description": "Optional session ID. If not provided, uses the most recent session.",
-                    }
+                    "session_id": _PROP_SESSION_ID,
+                    "include_all_plots": _PROP_INCLUDE_ALL_PLOTS,
                 },
             },
         ),
@@ -266,14 +288,12 @@ async def list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "session_id": {
-                        "type": "string",
-                        "description": "Optional session ID. If not provided, uses the most recent session.",
-                    },
+                    "session_id": _PROP_SESSION_ID,
                     "limit": {
                         "type": "number",
                         "description": "Maximum number of turns to retrieve (default: 10)",
                     },
+                    "include_all_plots": _PROP_INCLUDE_ALL_PLOTS,
                 },
             },
         ),
@@ -292,10 +312,8 @@ async def list_tools() -> list[types.Tool]:
                         "type": "number",
                         "description": "Turn number to retrieve",
                     },
-                    "session_id": {
-                        "type": "string",
-                        "description": "Optional session ID. If not provided, uses the most recent session.",
-                    },
+                    "session_id": _PROP_SESSION_ID,
+                    "include_all_plots": _PROP_INCLUDE_ALL_PLOTS,
                 },
                 "required": ["turn"],
             },
@@ -306,10 +324,7 @@ async def list_tools() -> list[types.Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "session_id": {
-                        "type": "string",
-                        "description": "Optional session ID. If not provided, uses the most recent session.",
-                    }
+                    "session_id": _PROP_SESSION_ID,
                 },
             },
         ),
@@ -343,6 +358,9 @@ async def call_tool(name: str, arguments: Any) -> list[types.TextContent]:
                     )
                 ]
 
+            if not arguments.get("include_all_plots"):
+                state = _filter_plots(state)
+
             return _json_response(state)
 
         elif name == "get_game_history":
@@ -352,6 +370,9 @@ async def call_tool(name: str, arguments: Any) -> list[types.TextContent]:
 
             if not history:
                 return [types.TextContent(type="text", text="No game history found.")]
+
+            if not arguments.get("include_all_plots"):
+                history = [_filter_plots(s) for s in history]
 
             return _json_response(history)
 
@@ -374,6 +395,9 @@ async def call_tool(name: str, arguments: Any) -> list[types.TextContent]:
                         type="text", text=f"No state found for turn {turn}"
                     )
                 ]
+
+            if not arguments.get("include_all_plots"):
+                state = _filter_plots(state)
 
             return _json_response(state)
 
