@@ -259,11 +259,27 @@ def _filter_plots(state: dict) -> dict:
             p for p in city.get("plots", [])
             if p.get("isWorked") or p.get("resource") or p.get("improvement")
         ]
+    return state
+
+
+def _deduplicate_visible_plots(state: dict) -> dict:
+    """Hoist shared visible plot data to a top-level map; units reference plots by 'x,y' key."""
+    shared: dict[str, dict] = {}
     for unit in state.get("units", []):
-        unit["visiblePlots"] = [
-            p for p in unit.get("visiblePlots", [])
-            if p.get("isSelf") or p.get("unitOnPlot") or p.get("improvement")
-        ]
+        keys = []
+        for p in unit.pop("visiblePlots", []):
+            key = f"{p['x']},{p['y']}"
+            if key not in shared:
+                shared[key] = {
+                    "terrain": p.get("terrain"),
+                    "feature": p.get("feature"),
+                    "improvement": p.get("improvement"),
+                    "unitOnPlot": p.get("unitOnPlot"),
+                    "owner": p.get("owner"),
+                }
+            keys.append(key)
+        unit["visiblePlotKeys"] = keys
+    state["visiblePlots"] = shared
     return state
 
 
@@ -360,6 +376,7 @@ async def call_tool(name: str, arguments: Any) -> list[types.TextContent]:
 
             if not arguments.get("include_all_plots"):
                 state = _filter_plots(state)
+            state = _deduplicate_visible_plots(state)
 
             return _json_response(state)
 
@@ -373,6 +390,7 @@ async def call_tool(name: str, arguments: Any) -> list[types.TextContent]:
 
             if not arguments.get("include_all_plots"):
                 history = [_filter_plots(s) for s in history]
+            history = [_deduplicate_visible_plots(s) for s in history]
 
             return _json_response(history)
 
@@ -398,6 +416,7 @@ async def call_tool(name: str, arguments: Any) -> list[types.TextContent]:
 
             if not arguments.get("include_all_plots"):
                 state = _filter_plots(state)
+            state = _deduplicate_visible_plots(state)
 
             return _json_response(state)
 
