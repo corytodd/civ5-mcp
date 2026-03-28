@@ -219,6 +219,10 @@ class Civ5GameStateDB:
 db = Civ5GameStateDB(CIV5_DB_PATH)
 
 
+def _json_response(data) -> list[types.TextContent]:
+    return [types.TextContent(type="text", text=json.dumps(data))]
+
+
 @app.list_tools()
 async def list_tools() -> list[types.Tool]:
     """List available MCP tools"""
@@ -314,17 +318,17 @@ async def call_tool(name: str, arguments: Any) -> list[types.TextContent]:
                     )
                 ]
 
-            return [types.TextContent(type="text", text=json.dumps(state, indent=2))]
+            return _json_response(state)
 
         elif name == "get_game_history":
             session_id = arguments.get("session_id")
-            limit = arguments.get("limit", 100)
+            limit = arguments.get("limit", 10)
             history = db.get_history(session_id, limit)
 
             if not history:
                 return [types.TextContent(type="text", text="No game history found.")]
 
-            return [types.TextContent(type="text", text=json.dumps(history, indent=2))]
+            return _json_response(history)
 
         elif name == "list_game_sessions":
             sessions = db.list_sessions()
@@ -332,7 +336,7 @@ async def call_tool(name: str, arguments: Any) -> list[types.TextContent]:
             if not sessions:
                 return [types.TextContent(type="text", text="No game sessions found.")]
 
-            return [types.TextContent(type="text", text=json.dumps(sessions, indent=2))]
+            return _json_response(sessions)
 
         elif name == "get_turn_state":
             turn = arguments["turn"]
@@ -346,7 +350,7 @@ async def call_tool(name: str, arguments: Any) -> list[types.TextContent]:
                     )
                 ]
 
-            return [types.TextContent(type="text", text=json.dumps(state, indent=2))]
+            return _json_response(state)
 
         elif name == "get_game_configuration":
             session_id = arguments.get("session_id")
@@ -360,7 +364,7 @@ async def call_tool(name: str, arguments: Any) -> list[types.TextContent]:
                     )
                 ]
 
-            return [types.TextContent(type="text", text=json.dumps(config, indent=2))]
+            return _json_response(config)
 
         elif name == "get_game_rules":
             rules = db.get_game_rules()
@@ -372,7 +376,7 @@ async def call_tool(name: str, arguments: Any) -> list[types.TextContent]:
                     )
                 ]
 
-            return [types.TextContent(type="text", text=json.dumps(rules, indent=2))]
+            return _json_response(rules)
 
         else:
             return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
