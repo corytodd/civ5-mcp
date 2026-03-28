@@ -5,6 +5,7 @@ Exposes Civ 5 game state via Model Context Protocol
 """
 
 import json
+import re
 import sqlite3
 import os
 import subprocess
@@ -249,6 +250,21 @@ _PROP_INCLUDE_ALL_PLOTS = {
 }
 
 
+_ENUM_PREFIX = re.compile(
+    r"^(?:TXT_KEY_BUILDING_|TXT_KEY_UNIT_|FOCUS_TYPE_|RESOURCECLASS_|IMPROVEMENT_|RESOURCE_|ATTITUDE_|TERRAIN_|FEATURE_|UNIT_|TECH_)"
+)
+
+
+def _strip_enum_prefixes(obj):
+    if isinstance(obj, dict):
+        return {k: _strip_enum_prefixes(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_strip_enum_prefixes(v) for v in obj]
+    if isinstance(obj, str):
+        return _ENUM_PREFIX.sub("", obj)
+    return obj
+
+
 def _strip_nulls(obj):
     if isinstance(obj, dict):
         return {k: _strip_nulls(v) for k, v in obj.items() if v is not None and v is not False}
@@ -258,7 +274,9 @@ def _strip_nulls(obj):
 
 
 def _json_response(data) -> list[types.TextContent]:
-    return [types.TextContent(type="text", text=json.dumps(_strip_nulls(data)))]
+    data = _strip_enum_prefixes(data)
+    data = _strip_nulls(data)
+    return [types.TextContent(type="text", text=json.dumps(data))]
 
 
 def _normalize_plots(state: dict, include_all: bool = False) -> dict:
