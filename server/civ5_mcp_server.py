@@ -253,18 +253,29 @@ def _json_response(data) -> list[types.TextContent]:
     return [types.TextContent(type="text", text=json.dumps(data))]
 
 
-def _filter_plots(state: dict) -> dict:
-    for city in state.get("cities", []):
-        city["plots"] = [
-            p for p in city.get("plots", [])
-            if p.get("isWorked") or p.get("resource") or p.get("improvement")
-        ]
-    return state
-
-
-def _deduplicate_visible_plots(state: dict) -> dict:
-    """Hoist shared visible plot data to a top-level map; units reference plots by 'x,y' key."""
+def _normalize_plots(state: dict, include_all: bool = False) -> dict:
+    """Hoist all plot data into a shared top-level map keyed by 'x,y'.
+    Cities and units reference plots by key. City plots are inserted first
+    as they carry yields; unit visible plots fill in any unseen tiles."""
     shared: dict[str, dict] = {}
+
+    for city in state.get("cities", []):
+        filtered = []
+        for p in city.pop("plots", []):
+            if not include_all and not (p.get("isWorked") or p.get("resource") or p.get("improvement")):
+                continue
+            key = f"{p['x']},{p['y']}"
+            shared[key] = {
+                "terrain": p.get("terrain"),
+                "feature": p.get("feature"),
+                "improvement": p.get("improvement"),
+                "resource": p.get("resource"),
+                "resourceType": p.get("resourceType"),
+                "yields": p.get("yields"),
+            }
+            filtered.append({"key": key, "isWorked": p.get("isWorked")})
+        city["plots"] = filtered
+
     for unit in state.get("units", []):
         keys = []
         for p in unit.pop("visiblePlots", []):
@@ -279,6 +290,7 @@ def _deduplicate_visible_plots(state: dict) -> dict:
                 }
             keys.append(key)
         unit["visiblePlotKeys"] = keys
+
     state["visiblePlots"] = shared
     return state
 
@@ -374,11 +386,7 @@ async def call_tool(name: str, arguments: Any) -> list[types.TextContent]:
                     )
                 ]
 
-            if not arguments.get("include_all_plots"):
-                state = _filter_plots(state)
-            state = _deduplicate_visible_plots(state)
-
-            return _json_response(state)
+            return _json_response(_normalize_plots(state, arguments.get("include_all_plots", False)))
 
         elif name == "get_game_history":
             session_id = arguments.get("session_id")
@@ -388,11 +396,8 @@ async def call_tool(name: str, arguments: Any) -> list[types.TextContent]:
             if not history:
                 return [types.TextContent(type="text", text="No game history found.")]
 
-            if not arguments.get("include_all_plots"):
-                history = [_filter_plots(s) for s in history]
-            history = [_deduplicate_visible_plots(s) for s in history]
-
-            return _json_response(history)
+            include_all = arguments.get("include_all_plots", False)
+            return _json_response([_normalize_plots(s, include_all) for s in history])
 
         elif name == "list_game_sessions":
             sessions = db.list_sessions()
@@ -414,11 +419,7 @@ async def call_tool(name: str, arguments: Any) -> list[types.TextContent]:
                     )
                 ]
 
-            if not arguments.get("include_all_plots"):
-                state = _filter_plots(state)
-            state = _deduplicate_visible_plots(state)
-
-            return _json_response(state)
+            return _json_response(_normalize_plots(state, arguments.get("include_all_plots", False)))
 
         elif name == "get_game_configuration":
             session_id = arguments.get("session_id")
