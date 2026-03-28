@@ -249,8 +249,16 @@ _PROP_INCLUDE_ALL_PLOTS = {
 }
 
 
+def _strip_nulls(obj):
+    if isinstance(obj, dict):
+        return {k: _strip_nulls(v) for k, v in obj.items() if v is not None and v is not False}
+    if isinstance(obj, list):
+        return [_strip_nulls(v) for v in obj]
+    return obj
+
+
 def _json_response(data) -> list[types.TextContent]:
-    return [types.TextContent(type="text", text=json.dumps(data))]
+    return [types.TextContent(type="text", text=json.dumps(_strip_nulls(data)))]
 
 
 def _normalize_plots(state: dict, include_all: bool = False) -> dict:
