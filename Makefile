@@ -37,6 +37,14 @@ docker-build: ENTRYPOINT=make
 docker-build: ARGS=build
 docker-build: .docker-run
 
+.PHONY: clean
+clean:
+	rm -rf dist/
+
+.PHONY: deploy
+deploy: build
+	pwsh tools/deploy.ps1
+
 .PHONY: bump-version
 bump-version:
 	pwsh tools/bump-version.ps1
