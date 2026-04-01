@@ -36,3 +36,7 @@ docker-test: .docker-run
 docker-build: ENTRYPOINT=make
 docker-build: ARGS=build
 docker-build: .docker-run
+
+.PHONY: bump-version
+bump-version:
+	pwsh tools/bump-version.ps1
