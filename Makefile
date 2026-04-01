@@ -3,18 +3,6 @@ PROJECT_ROOT := $(CURDIR)
 
 default: build
 
-.PHONY: lint
-lint:
-	./tools/lint.sh
-
-.PHONY: test
-test:
-	./tools/test.sh
-
-.PHONY: build
-build:
-	./tools/build.sh
-
 DOCKER_RUN = docker run --rm -it \
 				-v $(PROJECT_ROOT):/app \
 
@@ -36,6 +24,20 @@ docker-test: .docker-run
 docker-build: ENTRYPOINT=make
 docker-build: ARGS=build
 docker-build: .docker-run
+
+.PHONY: lint test build
+ifeq ($(OS),Windows_NT)
+lint: docker-lint
+test: docker-test
+build: docker-build
+else
+lint:
+	./tools/lint.sh
+test:
+	./tools/test.sh
+build:
+	./tools/build.sh
+endif
 
 .PHONY: clean
 clean:
